@@ -1,11 +1,100 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from '@/styles/Home.module.css'
+import Head from "next/head";
+import { Inter } from "next/font/google";
+import { Box, Button, Heading, Spinner, Text } from "@chakra-ui/react";
+import { Web3Auth } from "@web3auth/modal";
+import { CHAIN_NAMESPACES, UserAuthInfo } from "@web3auth/base";
+import { SolanaWallet } from "@web3auth/solana-provider";
+import { OpenloginUserInfo } from "@toruslabs/openlogin-utils";
+import { useEffect, useState } from "react";
+import { Container, SimpleGrid } from "@chakra-ui/react";
+import ProductCard from "../components/ProductCard/ProductCard";
+import Navbar from "../components/Navbar/Navbar";
+import products from "../utils/products";
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
+  const [webAuth, setWebAuth] = useState<Web3Auth | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [userInfo, setUserInfo] = useState<UserAuthInfo | null>(null);
+  const [user, setUser] = useState<Partial<OpenloginUserInfo>>(
+    {} as Partial<OpenloginUserInfo>
+  );
+
+  const handleLogin = async () => {
+    if (!webAuth) {
+      throw new Error("Web3Auth not initialized");
+    }
+
+    const web3AuthProvider = await webAuth.connect();
+
+    if (!web3AuthProvider) {
+      throw new Error("Web3Auth provider not found");
+    }
+
+    handleAuthorized(webAuth);
+  };
+
+  const handleLogout = async () => {
+    if (!webAuth) {
+      throw new Error("Web3Auth provider not found");
+    }
+
+    await webAuth.logout();
+
+    setUser({} as Partial<OpenloginUserInfo>);
+    setUserInfo(null);
+    // window.location.reload()
+  };
+
+  const handleAuthorized = async (web: Web3Auth) => {
+    if (!web.provider) {
+      throw new Error("Web3Auth not initialized");
+    }
+
+    const authUser = await web.authenticateUser();
+    const user = await web.getUserInfo();
+    setUserInfo(authUser);
+    setUser(user);
+  };
+
+  useEffect(() => {
+    const handleInit = async () => {
+      setLoading(true);
+      try {
+        const web3Auth = new Web3Auth({
+          clientId:
+            "BK-ky-WHet6Mn7PRssBOOf_M-BVdBti8MhiC3oy8hZizy8MkStzpE-uZ6p2iKxTLzrQDCE7536gFK_TME2YKrn4",
+          web3AuthNetwork: "sapphire_devnet",
+          chainConfig: {
+            chainNamespace: CHAIN_NAMESPACES.SOLANA,
+            chainId: "0x3",
+            rpcTarget: "https://api.devnet.solana.com",
+            displayName: "SOLANA DevNet",
+            ticker: "SOL",
+            tickerName: "Solana",
+          },
+        });
+
+        await web3Auth.initModal();
+
+        setWebAuth(web3Auth);
+
+        if (web3Auth.connected) {
+          handleAuthorized(web3Auth);
+        }
+
+        // handleAuthorized(web3Auth)
+      } catch (error) {
+        throw new Error("Could not initialize project");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    handleInit();
+  }, []);
+
   return (
     <>
       <Head>
@@ -14,101 +103,23 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className={`${styles.main} ${inter.className}`}>
-        <div className={styles.description}>
-          <p>
-            Get started by editing&nbsp;
-            <code className={styles.code}>pages/index.tsx</code>
-          </p>
-          <div>
-            <a
-              href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              By{' '}
-              <Image
-                src="/vercel.svg"
-                alt="Vercel Logo"
-                className={styles.vercelLogo}
-                width={100}
-                height={24}
-                priority
-              />
-            </a>
-          </div>
-        </div>
 
-        <div className={styles.center}>
-          <Image
-            className={styles.logo}
-            src="/next.svg"
-            alt="Next.js Logo"
-            width={180}
-            height={37}
-            priority
-          />
-        </div>
-
-        <div className={styles.grid}>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Docs <span>-&gt;</span>
-            </h2>
-            <p>
-              Find in-depth information about Next.js features and&nbsp;API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Learn <span>-&gt;</span>
-            </h2>
-            <p>
-              Learn about Next.js in an interactive course with&nbsp;quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Templates <span>-&gt;</span>
-            </h2>
-            <p>
-              Discover and deploy boilerplate example Next.js&nbsp;projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Deploy <span>-&gt;</span>
-            </h2>
-            <p>
-              Instantly deploy your Next.js site to a shareable URL
-              with&nbsp;Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+      <Navbar
+        handleLogin={handleLogin}
+        handleLogout={handleLogout}
+        user={user}
+      />
+      {loading ? (
+        <Spinner />
+      ) : webAuth && webAuth.connected ? (
+        <SimpleGrid columns={3} spacing={1}>
+          {products.map((product, index) => (
+            <ProductCard key={index} product={product} />
+          ))}
+        </SimpleGrid>
+      ) : (
+        <Box textAlign='center' paddingY='50px'>Login to view our product catelog</Box>
+      )}
     </>
-  )
+  );
 }
