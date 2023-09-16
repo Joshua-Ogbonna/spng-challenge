@@ -63,8 +63,7 @@ export default function Home() {
       setLoading(true);
       try {
         const web3Auth = new Web3Auth({
-          clientId:
-            "BK-ky-WHet6Mn7PRssBOOf_M-BVdBti8MhiC3oy8hZizy8MkStzpE-uZ6p2iKxTLzrQDCE7536gFK_TME2YKrn4",
+          clientId: process.env.NEXT_PUBLIC_CLIENT_ID as string,
           web3AuthNetwork: "sapphire_devnet",
           chainConfig: {
             chainNamespace: CHAIN_NAMESPACES.SOLANA,
@@ -118,7 +117,9 @@ export default function Home() {
           ))}
         </SimpleGrid>
       ) : (
-        <Box textAlign='center' paddingY='50px'>Login to view our product catelog</Box>
+        <Box textAlign="center" paddingY="50px">
+          Login to view our product catelog
+        </Box>
       )}
     </>
   );
